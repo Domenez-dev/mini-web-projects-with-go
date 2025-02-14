@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 func GetUser(username string) (Login, error) {
 	var user Login
 	row := DB.QueryRow("SELECT username, hashedPassword, sessionToken, csrfToken FROM users WHERE username = ?", username)
@@ -14,6 +16,7 @@ func CreateUser(user Login) error {
 }
 
 func UpdateUser(user Login) error {
+	fmt.Println(user)
 	_, err := DB.Exec("UPDATE users SET hashedPassword = ?, sessionToken = ?, csrfToken = ? WHERE username = ?",
 		user.HashedPassword, user.SessionToken, user.CSRFToken, user.Username)
 	return err

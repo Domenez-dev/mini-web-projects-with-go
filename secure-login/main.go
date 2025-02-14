@@ -128,7 +128,7 @@ func logout(w http.ResponseWriter, r *http.Request) {
 	username := r.FormValue("username")
 	user, err := GetUser(username)
 	if err != nil {
-		http.Error(w, "Failed to get user", http.StatusInternalServerError)
+		http.Error(w, "yFailed to get user", http.StatusInternalServerError)
 		return
 	}
 
