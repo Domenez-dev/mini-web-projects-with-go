@@ -1,0 +1,160 @@
+{
+	"info": {
+		"_postman_id": "d0a60a70-842f-47b7-8d0f-ad7d2086b51e",
+		"name": "golang",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "40313532",
+		"_collection_link": "https://gdg-team-dev-6.postman.co/workspace/gdg-Team-dev-6-Workspace~a55dec76-0988-44a4-80db-207f27d7b832/collection/40313532-d0a60a70-842f-47b7-8d0f-ad7d2086b51e?action=share&source=collection_link&creator=40313532"
+	},
+	"item": [
+		{
+			"name": "secure-login",
+			"item": [
+				{
+					"name": "register",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "username",
+									"value": "zakizaki",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "Password8",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "localhost:8080/register",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "username",
+									"value": "zakaria7",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "Password7",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "localhost:8080/login",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "private",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-CSRF-Token",
+								"value": "h5cDtC_eoDT9BpyzdSe1nBYhdkWLNi3KlO8EbnGbw7o",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "username",
+									"value": "zakizaki",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "Password8",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "localhost:8080/private",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"private"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "logout",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-CSRF-Token",
+								"value": "1OflQgLPQjVvTPj7T2ve750ultNXMrR_HdHxpm7bHCY",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "username",
+									"value": "zakizaki",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "Password8",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "localhost:8080/logout",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"logout"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
