@@ -26,6 +26,11 @@ This is a simple web project written in GoLang that demonstrates user authentica
 3. Navigate to the project directory.
 4. Run `go run main.go database.go utils.go middleware.go services.go` to start the server.
 
+```> [!NOTE]
+- you can also build the project using the command `make build` and then run the server using `./webserver` or `./make run`
+- to clean the build just run `make clean`
+```
+
 ## Testing the Project
 
 A bash script `test_scripts.sh` is provided to test the endpoints using `curl`.
@@ -50,3 +55,7 @@ To execute the tests:
 
 - Ensure the database file `awesome.db` is in the project directory.
 - Modify the `BASE_URL` in `test_scripts.sh` if the server runs on a different host or port.
+
+```
+
+```
