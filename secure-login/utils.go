@@ -44,7 +44,7 @@ func CheckPasswordHash(password, hash string) bool {
 	return err == nil
 }
 
-func GenerateToke(length int) string {
+func GenerateToken(length int) string {
 	bytes := make([]byte, length)
 	if _, err := rand.Read(bytes); err != nil {
 		log.Fatal("Failed to generate token")

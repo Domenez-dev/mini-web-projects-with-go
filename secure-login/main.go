@@ -1,21 +1,27 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"net/http"
 	"time"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 type Login struct {
-	hashedPassword string
-	sessionToken   string
-	CSFTToken      string
+	Username       string
+	HashedPassword string
+	SessionToken   string
+	CSRFToken      string
 }
 
-// users data: {username: Login}
-var users = map[string]Login{}
+var DB *sql.DB
 
 func main() {
+	InitDatabase()
+	defer DB.Close()
+
 	http.HandleFunc("/login", login)
 	http.HandleFunc("/register", register)
 	http.HandleFunc("/logout", logout)
@@ -25,21 +31,19 @@ func main() {
 
 func login(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		err := http.StatusMethodNotAllowed
-		http.Error(w, "Invalide Methode", err)
+		http.Error(w, "Invalid Method", http.StatusMethodNotAllowed)
 		return
 	}
 	username := r.FormValue("username")
 	password := r.FormValue("password")
-	user, ok := users[username]
-	if !ok || !CheckPasswordHash(password, user.hashedPassword) {
-		err := http.StatusUnauthorized
-		http.Error(w, "User not found", err)
+	user, err := GetUser(username)
+	if err != nil || !CheckPasswordHash(password, user.HashedPassword) {
+		http.Error(w, "User not found", http.StatusUnauthorized)
 		return
 	}
 
-	sessionToken := GenerateToke(32)
-	csrfToken := GenerateToke(32)
+	sessionToken := GenerateToken(32)
+	csrfToken := GenerateToken(32)
 	oneDay := time.Now().Add(24 * time.Hour)
 
 	// set Session cookie
@@ -58,18 +62,20 @@ func login(w http.ResponseWriter, r *http.Request) {
 		HttpOnly: false,
 	})
 
-	user.sessionToken = sessionToken
-	user.CSFTToken = csrfToken
-	users[username] = user
+	user.SessionToken = sessionToken
+	user.CSRFToken = csrfToken
+	if err := UpdateUser(user); err != nil {
+		http.Error(w, "Failed to update user", http.StatusInternalServerError)
+		return
+	}
 
 	w.WriteHeader(http.StatusAccepted)
-	fmt.Fprintf(w, "User Logged succesfully")
+	fmt.Fprintf(w, "User Logged in successfully")
 }
 
 func register(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		err := http.StatusMethodNotAllowed
-		http.Error(w, "Invalide Methode", err)
+		http.Error(w, "Invalid Method", http.StatusMethodNotAllowed)
 		return
 	}
 	username := r.FormValue("username")
@@ -77,32 +83,34 @@ func register(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the username and password are valid
 	if !StrongPassword(password) || len(username) < 8 {
-		err := http.StatusNotAcceptable
-		http.Error(w, "Invalide username or password", err)
+		http.Error(w, "Invalid username or password", http.StatusNotAcceptable)
 		return
 	}
 
-	// Check If user exists
-	if _, ok := users[username]; ok {
-		err := http.StatusConflict
-		http.Error(w, "User already exists", err)
+	// Check if user exists
+	if _, err := GetUser(username); err == nil {
+		http.Error(w, "User already exists", http.StatusConflict)
 		return
 	}
 
-	HashPassword, _ := HashPassword(password)
-	users[username] = Login{hashedPassword: HashPassword}
+	hashedPassword, _ := HashPassword(password)
+	user := Login{Username: username, HashedPassword: hashedPassword}
+	if err := CreateUser(user); err != nil {
+		http.Error(w, "Failed to create user", http.StatusInternalServerError)
+		return
+	}
 
 	w.WriteHeader(http.StatusCreated)
 	fmt.Fprintf(w, "User created")
 }
 
 func logout(w http.ResponseWriter, r *http.Request) {
-	if Authorize(r) != nil {
-		err := http.StatusUnauthorized
-		http.Error(w, "UnAuthorized", err)
+	if err := Authorize(r); err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
+	// Clear cookies
 	http.SetCookie(w, &http.Cookie{
 		Name:     "session_token",
 		Value:    "",
@@ -118,26 +126,32 @@ func logout(w http.ResponseWriter, r *http.Request) {
 	})
 
 	username := r.FormValue("username")
-	user := users[username]
-	user.sessionToken = ""
-	user.CSFTToken = ""
-	users[username] = user
+	user, err := GetUser(username)
+	if err != nil {
+		http.Error(w, "Failed to get user", http.StatusInternalServerError)
+		return
+	}
 
-	fmt.Fprintf(w, "Logged out succesfully")
+	user.SessionToken = ""
+	user.CSRFToken = ""
+	if err := UpdateUser(user); err != nil {
+		http.Error(w, "Failed to update user", http.StatusInternalServerError)
+		return
+	}
+
+	fmt.Fprintf(w, "Logged out successfully")
 }
 
 func private(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		err := http.StatusUnauthorized
-		http.Error(w, "Unauthorized method", err)
+		http.Error(w, "Unauthorized method", http.StatusUnauthorized)
 		return
 	}
 
-	if Authorize(r) != nil {
-		err := http.StatusUnauthorized
-		http.Error(w, "Invalide Token", err)
+	if err := Authorize(r); err != nil {
+		http.Error(w, "Invalid Token", http.StatusUnauthorized)
 		return
 	}
 	username := r.FormValue("username")
-	fmt.Fprintf(w, "CSRF valide, welcome back %s", username)
+	fmt.Fprintf(w, "CSRF valid, welcome back %s", username)
 }
